@@ -1,0 +1,8 @@
+2011_09_26_drive_0013_sync/
+2011_09_26_drive_0001_sync/
+Visual-Selective-VIO/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
