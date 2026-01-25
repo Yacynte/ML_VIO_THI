@@ -7,3 +7,5 @@ __pycache__/
 *.pyd
 .venv/
 ML_VIO_THI/
+data_odometry_gray/
+datasets/
