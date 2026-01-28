@@ -12,5 +12,4 @@ data_odometry_gray/
 datasets/
 organized_data/
 kitti dataset/
-ML_VIO_THI_meru/ML_VIO_THI/__pycache__
 presentation.py
