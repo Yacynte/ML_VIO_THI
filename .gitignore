@@ -1,5 +1,6 @@
 2011_09_26_drive_0013_sync/
 2011_09_26_drive_0001_sync/
+2011_10_03_drive_0034_sync/
 Visual-Selective-VIO/
 __pycache__/
 *.pyc
@@ -10,5 +11,6 @@ ML_VIO_THI/
 data_odometry_gray/
 datasets/
 organized_data/
-results/
 kitti dataset/
+ML_VIO_THI_meru/ML_VIO_THI/__pycache__
+presentation.py
