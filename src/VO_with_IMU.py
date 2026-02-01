@@ -14,7 +14,7 @@ import feature_matching  # Import the feature_mathing module
 
 alpha_t = 0.85 # Complementary filter weight for translation high -> trust VO more
 alpha = 0.85  # Complementary filter weight for orientation high -> trust VO more
-folder_number = 4  # Change this to process different folders
+folder_number = 13  # Change this to process different folders
 
 
 START_FRAME = 0  # Starting frame index
@@ -28,7 +28,10 @@ MIN_INLIERS_TO_ACCEPT_POSE = 10
 LAST_POSE_R = None
 LAST_POSE_t = None
 
-
+global VIZUALISE_MATCHES
+VIZUALISE_MATCHES = False
+global STOP
+STOP = False
 image_timestamps = None
 imu_poses = None  # To be loaded later
 global image_files
@@ -39,34 +42,34 @@ global min_indx
 
 # -------------------- Load dataset Paths --------------------
 
-# UrbanIng-V2X dataset paths
-dataset_type = 'urbaning'
-BASE_PATH = "/home/divan/ML_VIO_THI"
-DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
-imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
-calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
-timestamp_file = None
-ground_truth_file = None
-imu2velo_path = None
-velo2cam_path = None
-cam2cam_path = None
-ess_tau = 15
-
-
-# # Kitti dataset paths (Commented out)
-# dataset_type = 'kitti'
-# calib_file = None
-# ground_truth_file = None
-# str2 = "09_26"
-# # str2 = "10_03"
+# # UrbanIng-V2X dataset paths
+# dataset_type = 'urbaning'
 # BASE_PATH = "/home/divan/ML_VIO_THI"
-# imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
-# DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
-# timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
-# imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
-# velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
-# cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
-# ess_tau = 1
+# DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
+# imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
+# calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
+# timestamp_file = None
+# ground_truth_file = None
+# imu2velo_path = None
+# velo2cam_path = None
+# cam2cam_path = None
+# ess_tau = 15
+
+
+# Kitti dataset paths (Commented out)
+dataset_type = 'kitti'
+calib_file = None
+ground_truth_file = None
+str2 = "09_26"
+# str2 = "10_03"
+BASE_PATH = "/home/divan/ML_VIO_THI"
+imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
+DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
+timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
+imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
+velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
+cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
+ess_tau = 1
 
 # KITTI-Mat dataset paths
 # DATASET_PATH = f'/home/divan/ML_VIO_THI/Visual-Selective-VIO/data/sequences/{folder_number:02d}/image_2'
@@ -173,16 +176,16 @@ def feature_detection(img_a_color, img_b_color, frame_index, method = 3):
     img_a_gray = cv.cvtColor(img_a_color, cv.COLOR_BGR2GRAY)
     img_b_gray = cv.cvtColor(img_b_color, cv.COLOR_BGR2GRAY)
 
-    src_pts, dst_pts, kp1, kp2, matches = None, None, None, None, None
+    src_pts, dst_pts, kp1, kp2, matches, outlier_matches = None, None, None, None, None, None
 
     if method == 1:
         src_pts, dst_pts, success = feature_matching.shi_tomasi_klt_tracking(img_a_gray, img_b_gray, frame_index)
     elif method == 2:
         src_pts, dst_pts, success = feature_matching.orb_bf_matcher(img_a_color, img_b_color)
     elif method == 3:
-        src_pts, dst_pts, kp1, kp2, matches, success = feature_matching.sift_flann_matcher(img_a_gray, img_b_gray)
+        src_pts, dst_pts, kp1, kp2, matches, outlier_matches, success = feature_matching.sift_flann_matcher(img_a_gray, img_b_gray)
 
-    return src_pts, dst_pts, kp1, kp2, matches, success
+    return src_pts, dst_pts, kp1, kp2, matches, outlier_matches, success
 
 
 def process_and_save_tracking(img_a_color, img_b_color, frame_index):
@@ -199,10 +202,13 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
     method = 3 # Hardcoded or could be arg, but user wants method 3 logic
     
     # Feature detection + KLT tracking
-    p0_tracked, p1_tracked, kp1, kp2, matches, success = feature_detection(img_a_color, img_b_color, frame_index, method=method)
+    p0_tracked, p1_tracked, kp1, kp2, matches, outlier_matches, success = feature_detection(img_a_color, img_b_color, frame_index, method=method)
 
     print(f"\nFrame {frame_index} → {frame_index+1}: tracked {len(p0_tracked)} features.")
 
+    # vizualise matches
+    if VIZUALISE_MATCHES:
+        vizualise_tracked(img_a_color, img_b_color, kp1, kp2, matches, outlier_matches, frame_index)
     # Compute VO
     if len(p0_tracked) >= MIN_FEATURES_FOR_E and success:
         # Pass distortion coefficients if available (for Urbaning)
@@ -260,6 +266,66 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
             fused_rotations.append(LAST_POSE_R.copy())
 
     return True
+
+
+# -------------------- Vizualise Tracked Points --------------------
+def vizualise_tracked(img_a_color, img_b_color, kp1, kp2, good_matches, outlier_matches, frame_index):
+    # 4. Visualize and Save the Tracking Results
+    
+    # Combine the two images side-by-side for drawing
+    h1, w1, _ = img_a_color.shape
+    h2, w2, _ = img_b_color.shape
+    combined_img = np.zeros((max(h1, h2), w1 + w2, 3), dtype=np.uint8)
+    combined_img[:h1, :w1] = img_a_color
+    combined_img[:h2, w1:w1+w2] = img_b_color
+
+    if outlier_matches is not None:
+        # Extract locations of outliers
+        src_outs = np.float32([kp1[m.queryIdx].pt for m in outlier_matches]).reshape(-1, 2)
+        dst_outs = np.float32([kp2[m.trainIdx].pt for m in outlier_matches]).reshape(-1, 2)
+
+    if good_matches is not None:
+        # Extract locations of good matches
+        p0_tracked = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 2)
+        p1_tracked = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 2)
+
+    for i in range(len(src_outs)):
+        cv.circle(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), 3, (0, 0, 255), -1)
+        cv.circle(combined_img, (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), 3, (0, 0, 255), -1)
+        cv.line(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), (0, 0, 255), 1)
+
+    num_tracked = len(p0_tracked)
+    # Draw lines connecting the matched points
+    for i in range(num_tracked):
+        # Draw on Frame A
+        cv.circle(combined_img, (int(p0_tracked[i][0]), int(p0_tracked[i][1])), 3, (0, 255, 0), -1) # Green circle on Frame A
+        
+        # Draw on Frame B (remember to offset the X coordinate)
+        x_frame2 = int(p1_tracked[i][0]) + w1
+        y_frame2 = int(p1_tracked[i][1])
+        cv.circle(combined_img, (x_frame2, y_frame2), 3, (0, 0, 255), -1) # Blue circle on Frame B
+        
+        # Draw line connecting them (Red line)
+        cv.line(combined_img, 
+                (int(p0_tracked[i][0]), int(p0_tracked[i][1])), 
+                (x_frame2, y_frame2), 
+                (255, 0, 0), 1)
+
+    # Save the combined image
+    save_filepath =  f'tracking_result_urbaning_turn_{frame_index:05d}.png'
+    # cv.imwrite(save_filepath, combined_img)
+    cv.imshow('Tracking Result', combined_img)
+    # Capture the key press
+    key = cv.waitKey(1) & 0xFF 
+
+    if key == ord('q'):
+        cv.destroyAllWindows()
+        global STOP
+        STOP = True
+        
+    elif key == ord('s'):
+        cv.imwrite(save_filepath, combined_img)
+        print(f"  > Saved tracking result to {save_filepath}")
 
 
 # -------------------- Main Loop with Pose Saving --------------------
@@ -380,6 +446,8 @@ def vins_visual_tracking_demo():
         imgB = cv.imread(image_files[i + 1])
 
         success = process_and_save_tracking(imgA, imgB, i)
+        if STOP:
+            break
 
     # Convert fused poses to imu frame for plotting
     fused_poses_imu = []

@@ -76,15 +76,18 @@ def sift_flann_matcher(img1, img2, grid_rows=2, grid_cols=4):
     # We only keep matches where the best match is significantly better (0.7 distance)
     # than the second best match.
     good_matches = []
+    outlier_matches = []
     for m, n in matches:
         if m.distance < 0.75 * n.distance:
             good_matches.append(m)
+        else:
+            outlier_matches.append(m)
 
     # 7. Geometric Verification (RANSAC)
     # We need at least 4 matches to calculate a Homography
     MIN_MATCH_COUNT = 10
 
-    spread_matches = get_spatially_distributed_matches( good_matches, kp1, img1.shape, grid_rows=grid_rows, grid_cols=grid_cols )
+    spread_matches, outlier_matches = get_spatially_distributed_matches( good_matches, outlier_matches, kp1, img1.shape, grid_rows=grid_rows, grid_cols=grid_cols )
 
     # print(f"Matches before Ratio Test: {len(matches)}")
     # print(f"Matches after Ratio Test: {len(good_matches)}")
@@ -95,14 +98,14 @@ def sift_flann_matcher(img1, img2, grid_rows=2, grid_cols=4):
         dst_pts = np.float32([kp2[m.trainIdx].pt for m in spread_matches]).reshape(-1, 2)
     else:
         print(f"Not enough matches are found - {len(spread_matches)}/{MIN_MATCH_COUNT}")
-        return None, None, False
+        return None, None, None, None, None, None, False
     
-    return src_pts, dst_pts, kp1, kp2, spread_matches, True
+    return src_pts, dst_pts, kp1, kp2, spread_matches, outlier_matches, True
 
 
 
 
-def get_spatially_distributed_matches(matches, keypoints, img_shape, grid_rows=2, grid_cols=4):
+def get_spatially_distributed_matches(good_matches, outlier_matches, keypoints, img_shape, grid_rows=2, grid_cols=4):
     """
     Filters matches to ensure they are spread out across the image using a grid.
     
@@ -125,7 +128,7 @@ def get_spatially_distributed_matches(matches, keypoints, img_shape, grid_rows=2
     # Dictionary to store matches per cell: key=(row, col), value=[match]
     match_grid = {}
     
-    for m in matches:
+    for m in good_matches:
         # Get the location of the keypoint in the query image
         # m.queryIdx refers to the index in the 'keypoints' list passed to this function
         pt = keypoints[m.queryIdx].pt
@@ -144,7 +147,6 @@ def get_spatially_distributed_matches(matches, keypoints, img_shape, grid_rows=2
         match_grid[(row, col)].append(m)
     
     distributed_matches = []
-    
     # Iterate over each cell and pick the best match
     for key in match_grid:
         cell_matches = match_grid[key]
@@ -154,10 +156,13 @@ def get_spatially_distributed_matches(matches, keypoints, img_shape, grid_rows=2
         
         # Select the top 1 match per cell. 
         # You can increase this slice (e.g., [:2]) if you want higher density.
-        num_matches = min(300, len(cell_matches))
+        num_matches = min(30, len(cell_matches))
         distributed_matches.extend(cell_matches[:num_matches])
-        
-    return distributed_matches
+        outlier_matches.extend(cell_matches[num_matches:num_matches*2])
+
+    # for m in distributed_outlier_matches:
+    #     outlier_matches.append(m)
+    return distributed_matches, outlier_matches
 
 
 def recover_pose_robust(img1, img2, kp1, kp2, matches, K, dist_coeffs=None):
