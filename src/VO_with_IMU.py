@@ -29,7 +29,7 @@ LAST_POSE_R = None
 LAST_POSE_t = None
 
 global VIZUALISE_MATCHES
-VIZUALISE_MATCHES = False
+VIZUALISE_MATCHES = True
 global STOP
 STOP = False
 image_timestamps = None
@@ -199,7 +199,7 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
     # 1: Shi-Tomasi + KL-Optical Flow
     # 2: ORB + BFMatcher
     # 3: SIFT + FLANN
-    method = 3 # Hardcoded or could be arg, but user wants method 3 logic
+    method = 1 # Hardcoded or could be arg, but user wants method 3 logic
     
     # Feature detection + KLT tracking
     p0_tracked, p1_tracked, kp1, kp2, matches, outlier_matches, success = feature_detection(img_a_color, img_b_color, frame_index, method=method)
@@ -208,7 +208,7 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
 
     # vizualise matches
     if VIZUALISE_MATCHES:
-        vizualise_tracked(img_a_color, img_b_color, kp1, kp2, matches, outlier_matches, frame_index)
+        vizualise_tracked(img_a_color, img_b_color, kp1 if method == 3 else p0_tracked, kp2 if method == 3 else p1_tracked, matches, outlier_matches, frame_index, method)
     # Compute VO
     if len(p0_tracked) >= MIN_FEATURES_FOR_E and success:
         # Pass distortion coefficients if available (for Urbaning)
@@ -269,7 +269,7 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
 
 
 # -------------------- Vizualise Tracked Points --------------------
-def vizualise_tracked(img_a_color, img_b_color, kp1, kp2, good_matches, outlier_matches, frame_index):
+def vizualise_tracked(img_a_color, img_b_color, kp1, kp2, good_matches, outlier_matches, frame_index, method):
     # 4. Visualize and Save the Tracking Results
     
     # Combine the two images side-by-side for drawing
@@ -283,17 +283,19 @@ def vizualise_tracked(img_a_color, img_b_color, kp1, kp2, good_matches, outlier_
         # Extract locations of outliers
         src_outs = np.float32([kp1[m.queryIdx].pt for m in outlier_matches]).reshape(-1, 2)
         dst_outs = np.float32([kp2[m.trainIdx].pt for m in outlier_matches]).reshape(-1, 2)
+        for i in range(len(src_outs)):
+            cv.circle(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), 3, (0, 0, 255), -1)
+            cv.circle(combined_img, (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), 3, (0, 0, 255), -1)
+            cv.line(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), (0, 0, 255), 1)
 
-    if good_matches is not None:
+    if good_matches is not None and method == 3:
         # Extract locations of good matches
         p0_tracked = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 2)
         p1_tracked = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 2)
-
-    for i in range(len(src_outs)):
-        cv.circle(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), 3, (0, 0, 255), -1)
-        cv.circle(combined_img, (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), 3, (0, 0, 255), -1)
-        cv.line(combined_img, (int(src_outs[i][0]), int(src_outs[i][1])), (int(dst_outs[i][0]) + w1, int(dst_outs[i][1])), (0, 0, 255), 1)
-
+    else:
+        p0_tracked = kp1
+        p1_tracked = kp2
+    
     num_tracked = len(p0_tracked)
     # Draw lines connecting the matched points
     for i in range(num_tracked):
@@ -569,7 +571,7 @@ def plot_imu_gps_2d(pose_ins: np.ndarray, gps_pose: np.ndarray = None):
     plt.legend()
     plt.axis('equal')
     plt.grid()
-    plt.savefig("vio_trajectory_urbaning_2.png")
+    plt.savefig("vio_trajectory_kitti_klt.png")
     plt.show()
 
 if __name__ == "__main__":
