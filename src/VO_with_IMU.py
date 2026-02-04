@@ -42,34 +42,34 @@ global min_indx
 
 # -------------------- Load dataset Paths --------------------
 
-# UrbanIng-V2X dataset paths
-dataset_type = 'urbaning'
-BASE_PATH = "/home/divan/ML_VIO_THI"
-DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
-imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
-calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
-timestamp_file = None
-ground_truth_file = None
-imu2velo_path = None
-velo2cam_path = None
-cam2cam_path = None
-ess_tau = 15
-
-
-# # Kitti dataset paths (Commented out)
-# dataset_type = 'kitti'
-# calib_file = None
-# ground_truth_file = None
-# # str2 = "09_26"
-# str2 = "10_03"
+# # UrbanIng-V2X dataset paths
+# dataset_type = 'urbaning'
 # BASE_PATH = "/home/divan/ML_VIO_THI"
-# imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
-# DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
-# timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
-# imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
-# velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
-# cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
-# ess_tau = 1
+# DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
+# imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
+# calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
+# timestamp_file = None
+# ground_truth_file = None
+# imu2velo_path = None
+# velo2cam_path = None
+# cam2cam_path = None
+# ess_tau = 15
+
+
+# Kitti dataset paths (Commented out)
+dataset_type = 'kitti'
+calib_file = None
+ground_truth_file = None
+# str2 = "09_26"
+str2 = "10_03"
+BASE_PATH = "/home/divan/ML_VIO_THI"
+imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
+DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
+timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
+imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
+velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
+cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
+ess_tau = 1
 
 # KITTI-Mat dataset paths
 # DATASET_PATH = f'/home/divan/ML_VIO_THI/Visual-Selective-VIO/data/sequences/{folder_number:02d}/image_2'
@@ -471,8 +471,10 @@ def vins_visual_tracking_demo():
         print("length of final trajectory:", len(final_trajectory))
         print("length of ground truth:", len(gps_coords))
         # plot_imu_gps_3d(final_trajectory, gps_pose=gps_coords)
-        plot_imu_gps_2d(final_trajectory, gps_pose=gps_coords)
-        # plot_result(final_trajectory, gps_pose=gps_coords)
+        if dataset_type == "kitti":
+            plot_result(final_trajectory, gps_pose=gps_coords)
+        else:
+            plot_imu_gps_2d(final_trajectory, gps_pose=gps_coords)
         
     print("\n--- Done ---")
     # print("Pose file saved at:", POSE_FILE)
