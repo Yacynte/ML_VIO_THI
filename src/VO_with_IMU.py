@@ -19,7 +19,7 @@ folder_number = 34  # Change this to process different folders
 
 
 START_FRAME = 0  # Starting frame index
-MAX_FRAMES_TO_PROCESS = 250  # Limit on number of frames to process
+MAX_FRAMES_TO_PROCESS = 750  # Limit on number of frames to process
 
 ESS_RANSAC_THRESH = 1.0
 MIN_FEATURES_FOR_E = 8
