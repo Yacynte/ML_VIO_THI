@@ -12,9 +12,9 @@ import feature_matching  # Import the feature_mathing module
 
 # -------------------- Config --------------------
 
-alpha_t = 0.85 # Complementary filter weight for translation high -> trust VO more
+alpha_t = 0.35 # Complementary filter weight for translation high -> trust VO more
 alpha = 0.85  # Complementary filter weight for orientation high -> trust VO more
-folder_number = 13  # Change this to process different folders
+folder_number = 1  # Change this to process different folders
 
 
 START_FRAME = 0  # Starting frame index
@@ -42,34 +42,34 @@ global min_indx
 
 # -------------------- Load dataset Paths --------------------
 
-# # UrbanIng-V2X dataset paths
-# dataset_type = 'urbaning'
-# BASE_PATH = "/home/divan/ML_VIO_THI"
-# DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
-# imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
-# calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
-# timestamp_file = None
-# ground_truth_file = None
-# imu2velo_path = None
-# velo2cam_path = None
-# cam2cam_path = None
-# ess_tau = 15
-
-
-# Kitti dataset paths (Commented out)
-dataset_type = 'kitti'
-calib_file = None
-ground_truth_file = None
-str2 = "09_26"
-# str2 = "10_03"
+# UrbanIng-V2X dataset paths
+dataset_type = 'urbaning'
 BASE_PATH = "/home/divan/ML_VIO_THI"
-imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
-DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
-timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
-imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
-velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
-cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
-ess_tau = 1
+DATASET_PATH = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_front_left_camera')
+imu_path = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/vehicle2_state')
+calib_file = os.path.join(BASE_PATH, f'datasets/UrbanIng-V2X/dataset/20241126_{folder_number:04d}_crossing2_00/calibration.json')
+timestamp_file = None
+ground_truth_file = None
+imu2velo_path = None
+velo2cam_path = None
+cam2cam_path = None
+ess_tau = 15
+
+
+# # Kitti dataset paths (Commented out)
+# dataset_type = 'kitti'
+# calib_file = None
+# ground_truth_file = None
+# # str2 = "09_26"
+# str2 = "10_03"
+# BASE_PATH = "/home/divan/ML_VIO_THI"
+# imu_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/oxts')
+# DATASET_PATH = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/data')
+# timestamp_file = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_drive_{folder_number:04d}_sync/image_00/timestamps.txt')
+# imu2velo_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_imu_to_velo.txt')
+# velo2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_velo_to_cam.txt')
+# cam2cam_path = os.path.join(BASE_PATH, f'2011_{str2}_drive_{folder_number:04d}_sync/2011_{str2}/2011_{str2}_calib/2011_{str2}/calib_cam_to_cam.txt')
+# ess_tau = 1
 
 # KITTI-Mat dataset paths
 # DATASET_PATH = f'/home/divan/ML_VIO_THI/Visual-Selective-VIO/data/sequences/{folder_number:02d}/image_2'
@@ -199,7 +199,7 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
     # 1: Shi-Tomasi + KL-Optical Flow
     # 2: ORB + BFMatcher
     # 3: SIFT + FLANN
-    method = 1 # Hardcoded or could be arg, but user wants method 3 logic
+    method = 3 # Hardcoded or could be arg, but user wants method 3 logic
     
     # Feature detection + KLT tracking
     p0_tracked, p1_tracked, kp1, kp2, matches, outlier_matches, success = feature_detection(img_a_color, img_b_color, frame_index, method=method)
@@ -208,7 +208,7 @@ def process_and_save_tracking(img_a_color, img_b_color, frame_index):
 
     # vizualise matches
     if VIZUALISE_MATCHES:
-        vizualise_tracked(img_a_color, img_b_color, kp1 if method == 3 else p0_tracked, kp2 if method == 3 else p1_tracked, matches, outlier_matches, frame_index, method)
+        vizualise_tracked(img_a_color, img_b_color, kp1 if method == 3 else p0_tracked, kp2 if method == 3 else p1_tracked, matches, None, frame_index, method)
     # Compute VO
     if len(p0_tracked) >= MIN_FEATURES_FOR_E and success:
         # Pass distortion coefficients if available (for Urbaning)
@@ -466,12 +466,13 @@ def vins_visual_tracking_demo():
     
     if len(final_trajectory) > 0:
         print("Plotting VIO trajectory (aligned to IMU frame) vs Ground Truth...")
-        np.save("cam_poses.npy", camera_poses)
-        np.save("imu_cam_coord.npy", interpolated_imu_positions)
+        # np.save("cam_poses.npy", camera_poses)
+        # np.save("imu_cam_coord.npy", interpolated_imu_positions)
         print("length of final trajectory:", len(final_trajectory))
         print("length of ground truth:", len(gps_coords))
         # plot_imu_gps_3d(final_trajectory, gps_pose=gps_coords)
         plot_imu_gps_2d(final_trajectory, gps_pose=gps_coords)
+        # plot_result(final_trajectory, gps_pose=gps_coords)
         
     print("\n--- Done ---")
     # print("Pose file saved at:", POSE_FILE)
@@ -567,11 +568,45 @@ def plot_imu_gps_2d(pose_ins: np.ndarray, gps_pose: np.ndarray = None):
         plt.plot(gps_pose[:, 0], gps_pose[:, 1], label='Ground Truth', linestyle='--', color='red', linewidth=2)
     plt.xlabel('X Position (m)')
     plt.ylabel('Y Position (m)')
-    plt.title('2D VIO Trajectory VS Ground truth')
+    plt.title('2D VIO Trajectory VS Ground truth, urbaning data path one')
     plt.legend()
     plt.axis('equal')
     plt.grid()
     plt.savefig("vio_trajectory_kitti_klt.png")
+    plt.show()
+
+def plot_result(pose_ins: np.ndarray, gps_pose: np.ndarray = None):
+    error = np.linalg.norm(gps_pose[:, :2] - pose_ins[:, :2], axis=1)
+    # dist = gps_pose[:, :2] - gps_pose[0, :2]
+    # dist = np.linalg.norm(dist, axis=1)
+    dist = [0]
+    for i in range(1, len(gps_pose)):
+        dx = gps_pose[i, :2] - gps_pose[i-1, :2]
+        dist.append(np.linalg.norm(dx) + dist[i-1])
+    dist = np.array(dist)
+    fig, axs = plt.subplots(1, 2, figsize=(12, 7))
+    ax1 = axs[0]
+    ax1.plot(pose_ins[:, 0], pose_ins[:, 1], label='VIO Trajectory', color='blue', linewidth=2)
+    if gps_pose is not None:
+        ax1.plot(gps_pose[:, 0], gps_pose[:, 1], label='Ground Truth', linestyle='--', color='red', linewidth=2)
+    ax1.set_xlabel('X Position (m)')
+    ax1.set_ylabel('Y Position (m)')
+    ax1.set_title('2D VIO Trajectory VS Ground truth')
+    ax1.legend()
+    ax1.axis('equal')
+    ax1.grid()
+
+    ax2 = axs[1]
+    ax2.plot(dist, error, label='Error', color='green', linewidth=2)
+    ax2.set_xlabel('Distance travelled (m)')
+    ax2.set_ylabel('Error (m)')
+    ax2.set_title('Error over Time')
+    ax2.legend()
+    ax2.grid()
+
+    plt.title("urbaning data path 1")
+    plt.tight_layout()
+    plt.savefig("vio_kitti_sift_w_error.png")
     plt.show()
 
 if __name__ == "__main__":
