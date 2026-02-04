@@ -96,6 +96,6 @@ pip install -r requirements.txt
 
 The user will be able to run:
 ```bash
-python3 src/VO_with_IMU.py
+python3 VO_with_IMU.py
 ```
 
