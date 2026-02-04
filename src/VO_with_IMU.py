@@ -8,17 +8,18 @@ from scipy.spatial.transform import Rotation as R
 import imu_processor_v2  # Import the imu module
 import imu_to_cam  # Import the imu_to_cam module
 import feature_matching  # Import the feature_mathing module
+from scipy.spatial.transform import Slerp
 
 
 # -------------------- Config --------------------
 
 alpha_t = 0.35 # Complementary filter weight for translation high -> trust VO more
 alpha = 0.85  # Complementary filter weight for orientation high -> trust VO more
-folder_number = 1  # Change this to process different folders
+folder_number = 34  # Change this to process different folders
 
 
 START_FRAME = 0  # Starting frame index
-MAX_FRAMES_TO_PROCESS = -1  # Limit on number of frames to process
+MAX_FRAMES_TO_PROCESS = 250  # Limit on number of frames to process
 
 ESS_RANSAC_THRESH = 1.0
 MIN_FEATURES_FOR_E = 8
@@ -98,7 +99,6 @@ elif dataset_type == 'kitti':
 # -------------------- Quaterion Interpolation --------------------
 def quaternion_slerp(q1, q2, fraction):
     """Interpolates between two quaternions using Scipy Slerp."""
-    from scipy.spatial.transform import Slerp
     key_rots = R.from_quat([q1, q2])
     key_times = [0, 1]
     slerp = Slerp(key_times, key_rots)
@@ -379,13 +379,20 @@ def vins_visual_tracking_demo():
             np.interp(image_timestamps, imu_timestamps, imu_poses[:, 5]),
         ])
 
-        # Interpolate IMU Rotations (Roll, Pitch, Yaw)
-        interpolated_imu_angles = np.column_stack([
-            np.interp(image_timestamps, imu_timestamps, imu_poses[:, 0]),
-            np.interp(image_timestamps, imu_timestamps, imu_poses[:, 1]),
-            np.interp(image_timestamps, imu_timestamps, imu_poses[:, 2]),
-        ])
+        # # Interpolate IMU Rotations (Roll, Pitch, Yaw)
+        # interpolated_imu_angles = np.column_stack([
+        #     np.interp(image_timestamps, imu_timestamps, imu_poses[:, 0]),
+        #     np.interp(image_timestamps, imu_timestamps, imu_poses[:, 1]),
+        #     np.interp(image_timestamps, imu_timestamps, imu_poses[:, 2]),
+        # ])
         
+        imu_rot = R.from_euler('xyz', imu_poses[:, :3])
+        slerp = Slerp(imu_timestamps, imu_rot)
+        interp_rot = slerp(image_timestamps)
+
+        interpolated_imu_angles = interp_rot.as_euler('xyz')
+
+
         int_psose = []
         int_rot_vecs = []
         for i in range(len(image_timestamps)):
@@ -606,7 +613,6 @@ def plot_result(pose_ins: np.ndarray, gps_pose: np.ndarray = None):
     ax2.legend()
     ax2.grid()
 
-    plt.title("urbaning data path 1")
     plt.tight_layout()
     plt.savefig("vio_kitti_sift_w_error.png")
     plt.show()

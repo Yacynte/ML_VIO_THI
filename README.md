@@ -99,3 +99,6 @@ The user will be able to run:
 python3 src/VO_with_IMU.py
 ```
 
+# Results
+
+![VIO trajectory Result Kitti](vio_kitti_sift_w_error.png)
