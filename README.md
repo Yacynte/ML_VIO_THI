@@ -6,7 +6,7 @@ Create a robust, standalone script [VO_with_IMU.py] and intergration script [imu
 # Results
 KITTI dataset
 ![VIO trajectory Result Kitti](vio_kitti_sift_w_error1.png)
-![VIO trajectory Result Kitti Long distance](vio_kitti_sift_w_error.png)
+![VIO trajectory Result Kitti Long distance](vio_kitti_sift_w_error2.png)
 
 
 ## Features
