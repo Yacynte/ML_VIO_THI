@@ -3,6 +3,10 @@
 ## Goal
 Create a robust, standalone script [VO_with_IMU.py] and intergration script [imu_processor_v2.py] to process IMU and VO data from KITTI and Urbaning datasets. The goal is to produce accurate dead-reckoning trajectories by correctly integrating accelerometer and gyroscope data, visual odometry and sensor fusion using a complementary filter.
 
+# Results
+
+![VIO trajectory Result Kitti](vio_kitti_sift_w_error.png)
+
 ## Features
 ### IMU Processing
 1.  **Modular Data Loading**:
@@ -99,6 +103,3 @@ The user will be able to run:
 python3 src/VO_with_IMU.py
 ```
 
-# Results
-
-![VIO trajectory Result Kitti](vio_kitti_sift_w_error.png)
