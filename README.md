@@ -6,6 +6,7 @@ Create a robust, standalone script [VO_with_IMU.py] and intergration script [imu
 # Results
 
 ![VIO trajectory Result Kitti](vio_kitti_sift_w_error.png)
+KITTI dataset
 
 ## Features
 ### IMU Processing
